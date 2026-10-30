@@ -1,0 +1,371 @@
+/* ---------- Base ---------- */
+:root {
+  --texto: #ffffff;
+  --texto-suave: rgba(255, 255, 255, 0.78);
+  --texto-fraco: rgba(255, 255, 255, 0.6);
+  --vidro: rgba(255, 255, 255, 0.14);
+  --vidro-borda: rgba(255, 255, 255, 0.22);
+  --vidro-forte: rgba(255, 255, 255, 0.24);
+  --destaque: #fde68a;
+  --chuva: #bae6fd;
+  --raio: 20px;
+  --fonte: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  font-family: var(--fonte);
+  color: var(--texto);
+  background: #1e293b;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* O céu fica numa camada fixa atrás do conteúdo, para cobrir a tela toda ao rolar. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--ceu);
+  transition: background 0.6s ease;
+}
+
+/* Cada tema troca o degradê do céu */
+body[data-ceu="ensolarado"] { --ceu: linear-gradient(160deg, #38bdf8 0%, #2563eb 55%, #1e40af 100%); }
+body[data-ceu="nublado"]    { --ceu: linear-gradient(160deg, #94a3b8 0%, #64748b 50%, #334155 100%); }
+body[data-ceu="chuva"]      { --ceu: linear-gradient(160deg, #475569 0%, #334155 50%, #1e293b 100%); }
+body[data-ceu="tempestade"] { --ceu: linear-gradient(160deg, #3f3f5a 0%, #27273d 55%, #12121f 100%); }
+body[data-ceu="noite"]      { --ceu: linear-gradient(160deg, #1e1b4b 0%, #172554 50%, #020617 100%); }
+
+a { color: inherit; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.pagina {
+  width: min(100% - 32px, 760px);
+  margin: 0 auto;
+  padding: 24px 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- Topo ---------- */
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.marca {
+  font-weight: 700;
+  font-size: 1.15rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.marca span { font-weight: 400; opacity: 0.8; }
+
+.busca {
+  position: relative;
+  flex: 1;
+}
+
+.busca input {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px 0 42px;
+  border-radius: 999px;
+  border: 1px solid var(--vidro-borda);
+  background: var(--vidro);
+  backdrop-filter: blur(12px);
+  color: var(--texto);
+  font: inherit;
+  outline: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+.busca input::placeholder { color: var(--texto-fraco); }
+.busca input:focus { background: var(--vidro-forte); border-color: rgba(255, 255, 255, 0.5); }
+.busca input::-webkit-search-cancel-button { filter: invert(1); }
+
+.busca-icone {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  display: flex;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.sugestoes {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  list-style: none;
+  padding: 6px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.3);
+}
+.sugestoes li {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.sugestoes li span { font-size: 0.85rem; color: #64748b; }
+.sugestoes li:hover,
+.sugestoes li[aria-selected="true"] { background: #eff6ff; }
+.sugestoes .sem-resultado { color: #64748b; cursor: default; }
+
+.acoes-topo { display: flex; gap: 8px; }
+
+.botao-icone,
+.botao-unidade {
+  height: 44px;
+  min-width: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--vidro);
+  border: 1px solid var(--vidro-borda);
+  backdrop-filter: blur(12px);
+  transition: background 0.2s, transform 0.1s;
+}
+.botao-unidade { padding: 0 14px; font-weight: 600; }
+.botao-icone:hover,
+.botao-unidade:hover { background: var(--vidro-forte); }
+.botao-icone:active,
+.botao-unidade:active { transform: scale(0.95); }
+
+/* ---------- Favoritos ---------- */
+.favoritos {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.favoritos:empty { display: none; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--vidro);
+  border: 1px solid var(--vidro-borda);
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+.chip .icone { color: var(--destaque); fill: var(--destaque); }
+.chip.ativo { background: rgba(255, 255, 255, 0.9); color: #1e293b; }
+
+/* ---------- Cartões ---------- */
+main { display: flex; flex-direction: column; gap: 16px; }
+
+.cartao {
+  padding: 22px;
+  border-radius: var(--raio);
+  background: var(--vidro);
+  border: 1px solid var(--vidro-borda);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+}
+
+.titulo-secao {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--texto-suave);
+  margin-bottom: 14px;
+}
+
+/* Clima atual */
+.atual { padding: 26px; }
+.atual-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.cidade { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
+.regiao { color: var(--texto-suave); margin-top: 2px; }
+
+.favoritar { flex-shrink: 0; }
+.favoritar.ativo .icone { color: var(--destaque); fill: var(--destaque); }
+
+.atual-corpo {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin: 18px 0 10px;
+}
+.atual-icone { color: var(--texto); filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.15)); }
+.atual-icone .icone { stroke-width: 1.3; }
+
+.temperatura { font-size: 5rem; font-weight: 200; line-height: 1; letter-spacing: -0.04em; }
+.temperatura span { font-size: 3rem; vertical-align: top; }
+.descricao { font-size: 1.2rem; font-weight: 500; margin-top: 4px; }
+.minmax { color: var(--texto-suave); margin-top: 4px; }
+.atualizado { font-size: 0.85rem; color: var(--texto-fraco); }
+
+/* Detalhes */
+.detalhes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.detalhe {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--vidro);
+  border: 1px solid var(--vidro-borda);
+  backdrop-filter: blur(16px);
+}
+.detalhe .icone { grid-row: span 2; opacity: 0.85; }
+.detalhe .rotulo { font-size: 0.8rem; color: var(--texto-suave); }
+.detalhe strong { font-size: 1.1rem; font-weight: 600; }
+
+/* Gráfico das próximas horas */
+.area-grafico { position: relative; height: 150px; }
+.grafico svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.linha-temp { fill: none; stroke: #ffffff; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+
+.marca-temp {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.marca-temp i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+.marca-temp b {
+  position: absolute;
+  bottom: 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.horas { position: relative; height: 66px; margin-top: 10px; }
+.hora {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+.hora span { color: var(--texto-suave); }
+.hora small { display: inline-flex; align-items: center; gap: 2px; color: var(--texto-fraco); font-size: 0.75rem; }
+.chuva-alta { color: var(--chuva) !important; font-weight: 600; }
+
+/* Semana */
+.semana { list-style: none; }
+.dia {
+  display: grid;
+  grid-template-columns: 70px 32px 52px 36px 1fr 36px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.dia:first-child { border-top: 0; padding-top: 0; }
+.dia-nome { font-weight: 500; text-transform: capitalize; }
+.dia-chuva { display: inline-flex; align-items: center; gap: 2px; font-size: 0.8rem; color: var(--texto-fraco); }
+.dia-min { text-align: right; color: var(--texto-suave); }
+.dia-max { font-weight: 600; }
+
+.faixa {
+  position: relative;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.18);
+}
+.faixa span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #7dd3fc, #fde68a, #fb923c);
+}
+
+/* Estados: carregando e erro */
+.esqueleto { min-height: 120px; }
+.esqueleto.atual { min-height: 250px; }
+.linha {
+  height: 16px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  background: linear-gradient(90deg, rgba(255,255,255,.12), rgba(255,255,255,.28), rgba(255,255,255,.12));
+  background-size: 200% 100%;
+  animation: brilho 1.2s infinite linear;
+}
+.l1 { width: 40%; height: 26px; }
+.l2 { width: 25%; height: 70px; margin-top: 30px; }
+.l3 { width: 55%; }
+.l4 { width: 100%; height: 80px; }
+@keyframes brilho { to { background-position: -200% 0; } }
+
+.erro { text-align: center; padding: 40px 24px; }
+.erro h2 { font-size: 1.2rem; margin: 12px 0 6px; }
+.erro p { color: var(--texto-suave); margin-bottom: 18px; }
+
+.botao {
+  padding: 11px 22px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1e293b;
+  font-weight: 600;
+}
+.botao:hover { background: #f1f5f9; }
+
+.vazio { color: var(--texto-suave); }
+
+/* Rodapé */
+.rodape {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--texto-fraco);
+}
+
+:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }
+
+/* ---------- Celular ---------- */
+@media (max-width: 640px) {
+  .pagina { padding-top: 16px; }
+  .topo { flex-wrap: wrap; }
+  .marca { flex: 1; }
+  .busca { order: 3; flex-basis: 100%; }
+  .temperatura { font-size: 4rem; }
+  .atual-corpo { gap: 16px; }
+  .atual-icone .icone { width: 72px; height: 72px; }
+  .detalhes { grid-template-columns: repeat(2, 1fr); }
+  .hora { font-size: 0.75rem; }
+  .hora small { font-size: 0.68rem; }
+  .dia { grid-template-columns: 58px 26px 46px 30px 1fr 30px; gap: 6px; font-size: 0.95rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
